@@ -1,11 +1,10 @@
 //////////////////requiring and using all npm modules////////////////
 
-require('dotenv').config() //a secret file for keeping the encryption keys safe
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption"); //mongoose encryption module
+const md5 = require("md5"); //hashing function for passwords
 
 const app = express();
 
@@ -25,9 +24,6 @@ const userSchema = new mongoose.Schema ({
   password: String
 });
 
-// using a plugin to encrypt a particular part of mongoDB
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
-
 const User = new mongoose.model("User", userSchema);
 
 app.get("/", function(req, res){
@@ -42,7 +38,7 @@ app.route("/login")
 
 .post(function(req, res){
   const username = req.body.username;
-  const password = req.body.password;
+  const password = md5(req.body.password); // using the md5 hashing function on the password field
 
   User.findOne({email: username}, function(err, foundUser){
     if(err){
@@ -74,7 +70,7 @@ app.route("/register")
 
  const newUser = new User ({
    email: req.body.username,
-   password: req.body.password // using the md5 hashing function on the password field
+   password: md5(req.body.password) // using the md5 hashing function on the password field
  });
 
  newUser.save(function(err){
